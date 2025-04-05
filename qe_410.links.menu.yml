@@ -1,0 +1,6 @@
+qe_410.qe_settings:
+  title: 410 Setting
+  description: Configure pages to return 410
+  parent: system.admin_config_system
+  route_name: qe_410.qe_settings
+  weight: 10

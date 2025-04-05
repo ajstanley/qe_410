@@ -1,0 +1,7 @@
+qe_410.qe_settings:
+  path: '/admin/config/system/qe-settings'
+  defaults:
+    _title: 'QE settings'
+    _form: 'Drupal\qe_410\Form\QeSettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

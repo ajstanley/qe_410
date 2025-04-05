@@ -1,0 +1,8 @@
+# Schema for the configuration files of the QE 410 module.
+qe_410.settings:
+  type: config_object
+  label: 'QE 410 settings'
+  mapping:
+    example:
+      type: string
+      label: 'Example'

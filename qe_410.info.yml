@@ -1,0 +1,5 @@
+name: 'QE 410'
+type: module
+description: 'Deleted pages will now throw 410s'
+package: Custom
+core_version_requirement: ^10 || ^11

@@ -1,0 +1,10 @@
+services:
+  qe_410.gone_page_subscriber:
+    class: Drupal\qe_410\EventSubscriber\GonePageSubscriber
+    arguments:
+      - '@path.current'
+      - '@renderer'
+      - '@theme.manager'
+      - '@config.factory'
+    tags:
+      - { name: event_subscriber }

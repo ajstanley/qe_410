@@ -8,7 +8,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Url;
+
 
 /**
  * Configure QE 410 settings for this site.
@@ -59,7 +59,7 @@ final class QeSettingsForm extends ConfigFormBase {
 
     $form['add_field'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Add field'),
+      '#value' => $this->t('Add path'),
       '#submit' => ['::addFieldCallback'],
       '#ajax' => [
         'callback' => '::ajaxRefresh',

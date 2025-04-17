@@ -12,10 +12,23 @@ use Symfony\Component\HttpFoundation\Response;
  */
 function qe_410_theme($existing, $type, $theme, $path) {
   return [
-    'qe_410_page' => [
-      'variables' => ['title' => NULL, 'markup' => NULL],
+    'qe_410_page_wrapper' => [
+      'variables' => [
+        'gone_title' => NULL,
+        'gone_message' => NULL,
+      ],
       'template' => 'qe-410-page',
     ],
+    'qe_410_page_content' => [
+      'variables' => [
+        'gone_title' => NULL,
+        'gone_message' => NULL,
+      ],
+      'template' => 'qe-410-page-content',
+    ],
+
   ];
 }
+
+
 

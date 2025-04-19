@@ -3,12 +3,8 @@ services:
     class: Drupal\qe_410\EventSubscriber\GonePageSubscriber
     arguments:
       - '@path.current'
-      - '@renderer'
-      - '@theme.manager'
       - '@config.factory'
       - '@main_content_renderer.html'
       - '@current_route_match'
-      - '@logger.factory'
     tags:
       - { name: event_subscriber }
-

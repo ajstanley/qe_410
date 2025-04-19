@@ -1,4 +1,12 @@
-<div class="qe-410-page">
-  <h1>{{ gone_title }}</h1>
-  <div>{{ gone_message }}</div>
-</div>
+{% extends "page.html.twig" %}
+
+{% block content %}
+  <div class="layout-container">
+    <main role="main" class="main-content">
+      <a id="main-content" tabindex="-1"></a>
+      <div class="message-box">
+        {{ qe_410_markup }}
+      </div>
+    </main>
+  </div>
+{% endblock %}

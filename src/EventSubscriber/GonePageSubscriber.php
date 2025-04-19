@@ -6,17 +6,12 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\Core\Path\CurrentPathStack;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Render\HtmlResponse;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Render\MainContent\HtmlRenderer;
+use Drupal\Core\Render\MainContent\MainContentRendererInterface;
 
 /**
- * Adds a 410 response to chosen pages.
+ * Subscribes to requests for content that has been permanently deleted.
  */
 class GonePageSubscriber implements EventSubscriberInterface {
 
@@ -28,80 +23,48 @@ class GonePageSubscriber implements EventSubscriberInterface {
   protected $currentPath;
 
   /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The theme manager service.
-   *
-   * @var \Drupal\Core\Theme\ThemeManagerInterface
-   */
-  protected $themeManager;
-
-  /**
-   * The main content renderer.
-   *
-   * @var \Drupal\Core\Render\MainContent\HtmlRenderer
-   */
-  protected $mainContentRenderer;
-
-  /**
-   * The route match.
-   *
-   * @var \Drupal\Core\Routing\RouteMatchInterface
-   */
-  protected $routeMatch;
-
-  /**
-   * The config factory service.
+   * The configuration factory.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
 
   /**
-   * The logger.
+   * The main content renderer.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   * @var \Drupal\Core\Render\MainContent\MainContentRendererInterface
    */
-  protected $logger;
+  protected $mainContentRenderer;
+
+  /**
+   * The current route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
   /**
    * Constructs a new GonePageSubscriber object.
    *
    * @param \Drupal\Core\Path\CurrentPathStack $currentPath
    *   The current path service.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
-   * @param \Drupal\Core\Theme\ThemeManagerInterface $themeManager
-   *   The theme manager service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The config factory service.
-   * @param \Drupal\Core\Render\MainContent\HtmlRenderer $mainContentRenderer
-   *   The main content renderer for HTML output.
+   *   The configuration factory.
+   * @param \Drupal\Core\Render\MainContent\MainContentRendererInterface $mainContentRenderer
+   *   The main content renderer.
    * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
-   *   The route match service for determining the current route.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
-   *   The logger channel factory service for logging events.
+   *   The current route match.
    */
   public function __construct(
     CurrentPathStack $currentPath,
-    RendererInterface $renderer,
-    ThemeManagerInterface $themeManager,
     ConfigFactoryInterface $configFactory,
-    HtmlRenderer $mainContentRenderer,
+    MainContentRendererInterface $mainContentRenderer,
     RouteMatchInterface $routeMatch,
-    LoggerChannelFactoryInterface $loggerFactory,
   ) {
     $this->currentPath = $currentPath;
-    $this->renderer = $renderer;
-    $this->themeManager = $themeManager;
     $this->configFactory = $configFactory;
     $this->mainContentRenderer = $mainContentRenderer;
     $this->routeMatch = $routeMatch;
-    $this->logger = $loggerFactory->get('qe_410');
   }
 
   /**
@@ -114,28 +77,38 @@ class GonePageSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Handles request events to display a 410 Gone page when needed.
+   *
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
+   *   The request event.
    */
   public function onRequest(RequestEvent $event) {
     $path = $this->currentPath->getPath();
     $fields = $this->configFactory->get('qe_410.settings')->get('fields') ?? [];
+
     if (in_array($path, $fields)) {
-      $request = $event->getRequest();
-      $content = [
-        '#theme' => 'qe_410_page_content',
-        '#gone_title' => 'Page Permanently Deleted',
-        '#gone_message' => 'The content you are looking for has been permanently removed.',
+      // Define the render array for the custom 410 message.
+      $full_url = "<strong>{$event->getRequest()->getUri()}</strong>";
+
+      $build = [
+        '#markup' => "<div class='message-box'><h2>This Page Is No Longer Available (410 Gone)</h2><p>{$full_url} has been permanently removed.<br />
+
+But don't worry, you can head back to our homepage at <a href='https://qe2foundation.ca/'>QE2Foundation.ca</a> to find what you're looking for!</p></div>",
+        '#type' => 'markup',
+        '#cache' => ['max-age' => 0],
       ];
 
-      $main_content = [
-        '#type' => 'page',
-        '#title' => 'Gone',
-        'content' => $content,
-      ];
+      // Render the response using Drupal theming.
+      $response = $this->mainContentRenderer->renderResponse(
+        $build,
+        $event->getRequest(),
+        $this->routeMatch
+      );
 
-      $response = $this->mainContentRenderer->renderResponse($main_content, $request, $this->routeMatch);
+      // Set the appropriate HTTP status code.
       $response->setStatusCode(410);
 
+      // Set the custom response.
       $event->setResponse($response);
     }
   }
